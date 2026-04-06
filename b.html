@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B-KENTE TRADITIONAL ONLINE SHOP</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f0f0;
+  margin: 0;
+  padding: 0;
+  user-select: none; /* Prevent text selection */
+}
+
+h1 {
+  text-align: center;
+  background-color: #222;
+  color: #fff;
+  margin: 0;
+  padding: 20px 0;
+}
+
+/* Product Grid */
+.products {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Product Card */
+.product {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  width: 200px;
+  padding: 10px;
+  text-align: center;
+}
+
+.product img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+button {
+  background-color: #28a745;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  margin-top: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+button:hover {
+  background-color: #218838;
+}
+
+/* Bottom section for admin and cart */
+.bottom-section {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  background: #fff;
+  padding: 20px;
+  gap: 20px;
+}
+
+/* Admin form */
+#adminForm {
+  max-width: 400px;
+  width: 100%;
+}
+
+#cart {
+  max-width: 400px;
+  width: 100%;
+}
+
+#cart ul {
+  list-style: none;
+  padding: 0;
+}
+
+</style>
+</head>
+<body>
+
+<h1>B-KENTE TRADITIONAL  ONLINE SHOP</h1>
+
+<!-- Product Display -->
+<div class="products" id="productContainer"></div>
+
+<!-- Bottom Section: Admin and Cart -->
+<div class="bottom-section">
+
+  <!-- Admin Upload Form -->
+  <div id="adminForm">
+    <h3>Admin: Add New Item</h3>
+    <input type="text" id="itemName" placeholder="Item Name" required><br><br>
+    <input type="number" id="itemPrice" placeholder="Price" required><br><br>
+    <input type="file" id="itemImage" accept="image/*" required><br><br>
+    <button onclick="addItem()">Add Item</button>
+  </div>
+
+  <!-- Cart -->
+  <div id="cart">
+    <h3>Your Cart</h3>
+    <ul id="cartItems"></ul>
+    <p><strong>Total: $<span id="cartTotal">0</span></strong></p>
+    <button onclick="checkout()">Place Order</button>
+  </div>
+
+</div>
+
+<script>
+let products = JSON.parse(localStorage.getItem('products')) || [];
+let cart = [];
+
+// Display products on page load
+window.onload = function() {
+  displayProducts();
+}
+
+// Add new item (Admin)
+function addItem() {
+  const name = document.getElementById('itemName').value;
+  const price = parseFloat(document.getElementById('itemPrice').value);
+  const imageInput = document.getElementById('itemImage');
+
+  if(!name || !price || !imageInput.files[0]) {
+    alert('Please fill all fields!');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const item = {
+      name: name,
+      price: price,
+      image: e.target.result
+    };
+    products.push(item);
+    localStorage.setItem('products', JSON.stringify(products));
+    displayProducts();
+    document.getElementById('itemName').value = '';
+    document.getElementById('itemPrice').value = '';
+    document.getElementById('itemImage').value = '';
+  }
+  reader.readAsDataURL(imageInput.files[0]);
+}
+
+// Display products in store
+function displayProducts() {
+  const container = document.getElementById('productContainer');
+  container.innerHTML = '';
+  products.forEach((item, index) => {
+    const card = document.createElement('div');
+    card.className = 'product';
+    card.innerHTML = `
+      <img src="${item.image}" alt="${item.name}">
+      <h4>${item.name}</h4>
+      <p>$${item.price.toFixed(2)}</p>
+      <button onclick="addToCart(${index})">Add to Cart</button>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// Add product to cart
+function addToCart(index) {
+  cart.push(products[index]);
+  displayCart();
+}
+
+// Display cart items and total
+function displayCart() {
+  const cartList = document.getElementById('cartItems');
+  const cartTotal = document.getElementById('cartTotal');
+  cartList.innerHTML = '';
+  let total = 0;
+  cart.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = `${item.name} - $${item.price.toFixed(2)}`;
+    cartList.appendChild(li);
+    total += item.price;
+  });
+  cartTotal.textContent = total.toFixed(2);
+}
+
+// Checkout - send order to email
+function checkout() {
+  if(cart.length === 0) {
+    alert('Your cart is empty!');
+    return;
+  }
+  let message = 'Order Details:\n\n';
+  cart.forEach(item => {
+    message += `${item.name} - $${item.price.toFixed(2)}\n`;
+  });
+  message += `\nTotal: $${cart.reduce((a,b)=>a+b.price,0).toFixed(2)}`;
+
+  // Open default email client
+  window.location.href = `mailto:charlesobengsiaw@gmail.com?subject=New Order&body=${encodeURIComponent(message)}`;
+
+  cart = [];
+  displayCart();
+}
+</script>
+
+</body>
+</html>
